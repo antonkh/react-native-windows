@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -22,6 +23,8 @@ namespace ReactNative
 
         private bool _isShiftKeyDown;
         private bool _isControlKeyDown;
+
+        private AccessibilitySettings _accessibility = new AccessibilitySettings();
 
         /// <summary>
         /// Instantiates the <see cref="ReactPage"/>.
@@ -120,6 +123,14 @@ namespace ReactNative
             {
                 _reactInstanceManager.OnBackPressed();
                 args.Handled = true;
+            };
+
+            _accessibility.HighContrastChanged += (sender, args) =>
+            {
+                var context = _reactInstanceManager.CurrentReactContext;
+                var emitter = context.GetJavaScriptModule<RCTNativeAppEventEmitter>();
+
+                emitter.emit("highContrastDidChange", sender.HighContrast);
             };
 
             Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += OnAcceleratorKeyActivated;

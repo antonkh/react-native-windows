@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Copyright (c) 2015-present, Facebook, Inc.
  * All rights reserved.
  *
@@ -11,8 +11,13 @@
  */
 'use strict';
 
+const RN = require('react-native');
+
+const HIGH_CONTRAST_EVENT = 'highContrastDidChange';
+
 type ChangeEventName = $Enum<{
   change: string,
+  [HIGH_CONTRAST_EVENT]: string,
 }>;
 
 var warning = require('fbjs/lib/warning');
@@ -28,15 +33,27 @@ var AccessibilityInfo = {
   addEventListener: function (
     eventName: ChangeEventName,
     handler: Function
-  ): void {
-    warning(false, 'AccessibilityInfo is not supported on this platform.');
+  ): Object {
+    if (eventName === HIGH_CONTRAST_EVENT) {
+      return RN.NativeAppEventEmitter.addListener(eventName, handler);
+    }
+
+    warning(false, 'AccessibilityInfo does not support this event on this platform.');
+
+    return {
+      remove: () => { }
+    };
   },
 
   removeEventListener: function(
     eventName: ChangeEventName,
     handler: Function
   ): void {
-    warning(false, 'AccessibilityInfo is not supported on this platform.');
+    if (eventName === HIGH_CONTRAST_EVENT) {
+      RN.NativeAppEventEmitter.removeListener(eventName, handler);
+    } else {
+      warning(false, 'AccessibilityInfo does not support this event on this platform.');
+    }
   },
 
 };
