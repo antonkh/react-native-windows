@@ -11,8 +11,10 @@
  */
 'use strict';
 
+const NativeModules = require('NativeModules');
 const RN = require('react-native');
 
+const RCTAccessibilityInfo = NativeModules.AccessibilityInfo;
 const HIGH_CONTRAST_EVENT = 'highContrastDidChange';
 
 type ChangeEventName = $Enum<{
@@ -30,8 +32,12 @@ var AccessibilityInfo = {
     });
   },
 
+  fetchIsHighContrast: function (): Promise {
+    return RCTAccessibilityInfo.fetchIsHighContrast();
+  },
+
   addEventListener: function (
-    eventName: ChangeEventName,
+    eventName: string,
     handler: Function
   ): Object {
     if (eventName === HIGH_CONTRAST_EVENT) {
@@ -46,7 +52,7 @@ var AccessibilityInfo = {
   },
 
   removeEventListener: function(
-    eventName: ChangeEventName,
+    eventName: string,
     handler: Function
   ): void {
     if (eventName === HIGH_CONTRAST_EVENT) {
