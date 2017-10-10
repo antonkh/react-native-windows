@@ -11,24 +11,18 @@
  */
 'use strict';
 
-const NativeModules = require('NativeModules');
-const RN = require('react-native');
+var NativeModules = require('NativeModules');
+var RCTDeviceEventEmitter = require('RCTDeviceEventEmitter');
 
-const RCTAccessibilityInfo = NativeModules.AccessibilityInfo;
-const HIGH_CONTRAST_EVENT = 'highContrastDidChange';
-
-type ChangeEventName = $Enum<{
-  change: string,
-  [HIGH_CONTRAST_EVENT]: string,
-}>;
-
-var warning = require('fbjs/lib/warning');
+var RCTAccessibilityInfo = NativeModules.AccessibilityInfo;
+var HIGH_CONTRAST_EVENT = 'highContrastDidChange';
+var _subscriptions = new Map();
 
 var AccessibilityInfo = {
-
-  fetch: function(): Promise<*> {
+  
+  fetch: function(): Promise {
     return new Promise((resolve, reject) => {
-      reject('AccessibilityInfo is not supported on this platform.');
+      resolve(false);
     });
   },
 
@@ -39,27 +33,25 @@ var AccessibilityInfo = {
   addEventListener: function (
     eventName: string,
     handler: Function
-  ): Object {
-    if (eventName === HIGH_CONTRAST_EVENT) {
-      return RN.NativeAppEventEmitter.addListener(eventName, handler);
+  ): void {
+    if (eventName !== HIGH_CONTRAST_EVENT) {
+      return {
+        remove() { }
+      };      
     }
 
-    warning(false, 'AccessibilityInfo does not support this event on this platform.');
+    var listener = RCTDeviceEventEmitter.addListener(eventName, enabled => handler(enabled));
 
-    return {
-      remove: () => { }
-    };
+    _subscriptions.set(handler, listener);
   },
 
   removeEventListener: function(
     eventName: string,
     handler: Function
   ): void {
-    if (eventName === HIGH_CONTRAST_EVENT) {
-      RN.NativeAppEventEmitter.removeListener(eventName, handler);
-    } else {
-      warning(false, 'AccessibilityInfo does not support this event on this platform.');
-    }
+    var listener = _subscriptions.get(handler);
+    listener && listener.remove();
+    _subscriptions.delete(handler);  
   },
 
 };
