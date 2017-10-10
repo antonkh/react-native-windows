@@ -39,7 +39,7 @@ var AccessibilityInfo = {
   addEventListener: function (
     eventName: AccessibilityEventName,
     handler: Function
-  ): void {
+  ): Object {
     if (eventName !== HIGH_CONTRAST_EVENT) {
       return {
         remove() { }
