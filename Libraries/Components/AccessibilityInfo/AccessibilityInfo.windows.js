@@ -19,6 +19,8 @@ var HIGH_CONTRAST_EVENT = 'highContrastDidChange';
 var _subscriptions = new Map();
 
 var AccessibilityInfo = {
+
+  initialHighContrast: RCTAccessibilityInfo.initialHighContrast,
   
   fetch: function(): Promise {
     return new Promise((resolve, reject) => {
@@ -43,6 +45,8 @@ var AccessibilityInfo = {
     var listener = RCTDeviceEventEmitter.addListener(eventName, enabled => handler(enabled));
 
     _subscriptions.set(handler, listener);
+
+    return listener;
   },
 
   removeEventListener: function(
