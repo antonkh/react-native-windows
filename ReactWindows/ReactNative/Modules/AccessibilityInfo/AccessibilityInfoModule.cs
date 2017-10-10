@@ -14,7 +14,7 @@ namespace ReactNative.Modules.Accessibilityinfo
         {
             _accessibility.HighContrastChanged += (sender, args) =>
             {
-                Context.GetJavaScriptModule<RCTNativeAppEventEmitter>()
+                Context.GetJavaScriptModule<RCTDeviceEventEmitter>()
                     .emit("highContrastDidChange", sender.HighContrast);
             };
         }

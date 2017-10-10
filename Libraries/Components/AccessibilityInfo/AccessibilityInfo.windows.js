@@ -18,6 +18,10 @@ var RCTAccessibilityInfo = NativeModules.AccessibilityInfo;
 var HIGH_CONTRAST_EVENT = 'highContrastDidChange';
 var _subscriptions = new Map();
 
+type AccessibilityEventName = $Enum<{
+  [HIGH_CONTRAST_EVENT]: string,
+}>;
+
 var AccessibilityInfo = {
 
   initialHighContrast: RCTAccessibilityInfo.initialHighContrast,
@@ -33,7 +37,7 @@ var AccessibilityInfo = {
   },
 
   addEventListener: function (
-    eventName: string,
+    eventName: AccessibilityEventName,
     handler: Function
   ): void {
     if (eventName !== HIGH_CONTRAST_EVENT) {
@@ -50,7 +54,7 @@ var AccessibilityInfo = {
   },
 
   removeEventListener: function(
-    eventName: string,
+    eventName: AccessibilityEventName,
     handler: Function
   ): void {
     var listener = _subscriptions.get(handler);
