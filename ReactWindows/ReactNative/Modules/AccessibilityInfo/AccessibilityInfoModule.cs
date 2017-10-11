@@ -67,5 +67,11 @@ namespace ReactNative.Modules.Accessibilityinfo
             Context.GetJavaScriptModule<RCTDeviceEventEmitter>()
                 .emit("highContrastDidChange", sender.HighContrast);
         }
+
+        [ReactMethod]
+        public void fetchIsHighContrast(IPromise promise)
+        {
+            promise.Resolve(_accessibility.HighContrast);
+        }
     }
 }

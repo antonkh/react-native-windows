@@ -32,6 +32,10 @@ var AccessibilityInfo = {
     });
   },
 
+  fetchIsHighContrast: function (): Promise {
+    return RCTAccessibilityInfo.fetchIsHighContrast();
+  },  
+
   addEventListener: function (
     eventName: AccessibilityEventName,
     handler: Function
