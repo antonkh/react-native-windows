@@ -10,7 +10,7 @@ namespace ReactNative.Modules.Accessibilityinfo
         private readonly AccessibilitySettings _accessibility = new AccessibilitySettings();
         private readonly UISettings _settings = new UISettings();
 
-        private string GetHexString(UIElementType type)
+        private string GetRgbaString(UIElementType type)
         {
             var color = _settings.UIElementColor(type);
             return "rgba(" + color.R + "," + color.G + "," + color.B + "," + color.A + ")";
@@ -20,25 +20,21 @@ namespace ReactNative.Modules.Accessibilityinfo
         {
             return new Dictionary<string, string>
             {
-                {  "windowText", GetHexString(UIElementType.WindowText) },
-                {  "hotlight", GetHexString(UIElementType.Hotlight) },
-                {  "grayText", GetHexString(UIElementType.GrayText) },
-                {  "highlightText", GetHexString(UIElementType.HighlightText) },
-                {  "highlight", GetHexString(UIElementType.Highlight) },
-                {  "buttonText", GetHexString(UIElementType.ButtonText) },
-                {  "buttonFace", GetHexString(UIElementType.ButtonFace) },
-                {  "window", GetHexString(UIElementType.Window) },
+                {  "windowText", GetRgbaString(UIElementType.WindowText) },
+                {  "hotlight", GetRgbaString(UIElementType.Hotlight) },
+                {  "grayText", GetRgbaString(UIElementType.GrayText) },
+                {  "highlightText", GetRgbaString(UIElementType.HighlightText) },
+                {  "highlight", GetRgbaString(UIElementType.Highlight) },
+                {  "buttonText", GetRgbaString(UIElementType.ButtonText) },
+                {  "buttonFace", GetRgbaString(UIElementType.ButtonFace) },
+                {  "window", GetRgbaString(UIElementType.Window) },
             };
         }
 
         public AccessibilityInfoModule(ReactContext reactContext)
             : base(reactContext)
         {
-            _accessibility.HighContrastChanged += (sender, args) =>
-            {
-                Context.GetJavaScriptModule<RCTDeviceEventEmitter>()
-                    .emit("highContrastDidChange", sender.HighContrast);
-            };
+
         }
 
         public override string Name => "AccessibilityInfo";
@@ -49,17 +45,27 @@ namespace ReactNative.Modules.Accessibilityinfo
             {
                 return new Dictionary<string, object>
                 {
-                    // TODO: It would be better to make fetchIsHighContrast synchronous,
+                    // TODO: It would be better to have a sync GethIsHighContrast,
                     // but this is not supported by the framework at the moment.
                     { "initialHighContrast", _accessibility.HighContrast },
                 };
             }
         }
 
-        [ReactMethod]
-        public void fetchIsHighContrast(IPromise promise)
+        public override void Initialize()
         {
-            promise.Resolve(_accessibility.HighContrast);
+            _accessibility.HighContrastChanged += OnHighContrastChanged;
+        }
+
+        public override void OnReactInstanceDispose()
+        {
+            _accessibility.HighContrastChanged -= OnHighContrastChanged;
+        }
+
+        private void OnHighContrastChanged(AccessibilitySettings sender, object args)
+        {
+            Context.GetJavaScriptModule<RCTDeviceEventEmitter>()
+                .emit("highContrastDidChange", sender.HighContrast);
         }
     }
 }
