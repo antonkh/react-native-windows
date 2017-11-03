@@ -82,21 +82,15 @@ namespace ReactNative.Views.View
 
             if (props.BackgroundColor != null)
             {
-                if (!_isFluentSupported || props.AcrylicOpacity == null && props.AcrylicTintColor == null && props.RevealBrush == null)
+                if (_isFluentSupported && props.RevealBrush)
                 {
-                    border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
-                }
-                else if (props.RevealBrush)
-                {
-#if WINDOWS_UWP
                     border.Background = new RevealBackgroundBrush
                     {
                         Color = ColorHelpers.Parse(props.BackgroundColor.Value),
                         FallbackColor = ColorHelpers.Parse(props.BackgroundColor.Value),
                     };
-#endif
                 }
-                else
+                else if (_isFluentSupported && (props.AcrylicOpacity != null || props.AcrylicTintColor != null))
                 {
 #if WINDOWS_UWP
                     border.Background = new AcrylicBrush
@@ -109,6 +103,10 @@ namespace ReactNative.Views.View
                         TintOpacity = props.AcrylicOpacity ?? 1.0,
                     };
 #endif
+                }
+                else
+                {
+                    border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
                 }
             }
         }
@@ -310,6 +308,14 @@ namespace ReactNative.Views.View
             border.BorderBrush = color.HasValue
                 ? new SolidColorBrush(ColorHelpers.Parse(color.Value))
                 : s_defaultBorderBrush;
+            if (_backgroundBrushProperties.GetOrCreateValue(view).RevealBrush)
+            {
+                border.BorderBrush = new RevealBorderBrush
+                {
+                    Color = ColorHelpers.Parse(color.Value),
+                    FallbackColor = ColorHelpers.Parse(color.Value),
+                };
+            }
         }
 
         /// <summary>
