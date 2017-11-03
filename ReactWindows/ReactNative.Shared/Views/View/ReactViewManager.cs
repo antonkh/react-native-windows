@@ -2,6 +2,7 @@ using ReactNative.Reflection;
 using ReactNative.UIManager;
 using ReactNative.UIManager.Annotations;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
 #if WINDOWS_UWP
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -282,15 +283,17 @@ namespace ReactNative.Views.View
             }
         }
 
-        private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
+        private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
+            Debug.WriteLine("Reveal_PointerEntered");
             var border = sender as Border;
             border.Tag = "Reveal = PointerOver";
             RevealBrush.SetState(border, RevealBrushState.PointerOver);
         }
 
-        private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
+        private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
         {
+            Debug.WriteLine("Reveal_PointerExited");
             var border = sender as Border;
             border.Tag = "Reveal = Normal";
             border.ClearValue(RevealBrush.StateProperty);
