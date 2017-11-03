@@ -36,7 +36,7 @@ namespace ReactNative.Views.View
         private class BackgroundBrushProperties
         {
             public uint? BackgroundColor;
-            public bool? RevealBrush;
+            public bool RevealBrush;
             public double? AcrylicOpacity;
             public uint? AcrylicTintColor;
             public string AcrylicSource;
@@ -86,7 +86,7 @@ namespace ReactNative.Views.View
                 {
                     border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
                 }
-                else if (props.RevealBrush.HasValue && props.RevealBrush.Value)
+                else if (props.RevealBrush)
                 {
 #if WINDOWS_UWP
                     border.Background = new RevealBackgroundBrush
@@ -260,8 +260,8 @@ namespace ReactNative.Views.View
             UpdateBackgroundBrush(view);
         }
 
-        [ReactProp("reveal")]
-        public void SetRevealHighlightEnabled(BorderedCanvas view, bool? value)
+        [ReactProp("reveal", DefaultBoolean = false)]
+        public void SetRevealHighlightEnabled(BorderedCanvas view, bool value)
         {
             _backgroundBrushProperties.GetOrCreateValue(view).RevealBrush = value;
             UpdateBackgroundBrush(view);
@@ -271,7 +271,7 @@ namespace ReactNative.Views.View
                 var border = GetOrCreateBorder(view);
                 border.Tag = "Reveal = Normal";
 
-                if (value.HasValue && value.Value)
+                if (value)
                 {
                     border.PointerEntered += Reveal_PointerEntered;
                     border.PointerExited += Reveal_PointerExited;
@@ -295,7 +295,7 @@ namespace ReactNative.Views.View
         {
             var border = sender as Border;
             border.Tag = "Reveal = Normal";
-            RevealBrush.SetState(border, RevealBrushState.Normal);
+            border.ClearValue(RevealBrush.StateProperty);
         }
 
         /// <summary>
