@@ -27,6 +27,7 @@ var ViewStylePropTypes = {
   acrylicOpacityUWP: PropTypes.number,
   acrylicSourceUWP: PropTypes.oneOf(['host', 'app']),
   acrylicTintColorUWP: ColorPropType,
+  reveal: PropTypes.bool,
   backfaceVisibility: PropTypes.oneOf(['visible', 'hidden']),
   backgroundColor: ColorPropType,
   borderColor: ColorPropType,

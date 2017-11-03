@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 #if WINDOWS_UWP
 using Windows.UI;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
@@ -35,14 +36,15 @@ namespace ReactNative.Views.View
         private class BackgroundBrushProperties
         {
             public uint? BackgroundColor;
+            public bool? RevealBrush;
             public double? AcrylicOpacity;
             public uint? AcrylicTintColor;
             public string AcrylicSource;
         }
 
-        private readonly bool _isAcrylicSupported =
+        private readonly bool _isFluentSupported =
 #if WINDOWS_UWP
-            ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush");
+            ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 5, 0);
 #else
             false;
 #endif
@@ -80,9 +82,19 @@ namespace ReactNative.Views.View
 
             if (props.BackgroundColor != null)
             {
-                if (!_isAcrylicSupported || props.AcrylicOpacity == null && props.AcrylicTintColor == null)
+                if (!_isFluentSupported || props.AcrylicOpacity == null && props.AcrylicTintColor == null && props.RevealBrush == null)
                 {
                     border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
+                }
+                else if (props.RevealBrush.HasValue && props.RevealBrush.Value)
+                {
+#if WINDOWS_UWP
+                    border.Background = new RevealBackgroundBrush
+                    {
+                        Color = ColorHelpers.Parse(props.BackgroundColor.Value),
+                        FallbackColor = ColorHelpers.Parse(props.BackgroundColor.Value),
+                    };
+#endif
                 }
                 else
                 {
@@ -246,6 +258,44 @@ namespace ReactNative.Views.View
         {
             _backgroundBrushProperties.GetOrCreateValue(view).AcrylicTintColor = value;
             UpdateBackgroundBrush(view);
+        }
+
+        [ReactProp("reveal")]
+        public void SetRevealHighlightEnabled(BorderedCanvas view, bool? value)
+        {
+            _backgroundBrushProperties.GetOrCreateValue(view).RevealBrush = value;
+            UpdateBackgroundBrush(view);
+
+            if (_isFluentSupported)
+            {
+                var border = GetOrCreateBorder(view);
+                border.Tag = "Reveal = Normal";
+
+                if (value.HasValue && value.Value)
+                {
+                    border.PointerEntered += Reveal_PointerEntered;
+                    border.PointerExited += Reveal_PointerExited;
+                }
+                else
+                {
+                    border.PointerEntered -= Reveal_PointerEntered;
+                    border.PointerExited -= Reveal_PointerExited;
+                }
+            }
+        }
+
+        private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var border = sender as Border;
+            border.Tag = "Reveal = PointerOver";
+            RevealBrush.SetState(border, RevealBrushState.PointerOver);
+        }
+
+        private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            var border = sender as Border;
+            border.Tag = "Reveal = Normal";
+            RevealBrush.SetState(border, RevealBrushState.Normal);
         }
 
         /// <summary>
