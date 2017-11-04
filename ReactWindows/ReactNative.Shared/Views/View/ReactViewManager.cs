@@ -2,7 +2,6 @@ using ReactNative.Reflection;
 using ReactNative.UIManager;
 using ReactNative.UIManager.Annotations;
 using System.Runtime.CompilerServices;
-using System.Diagnostics;
 #if WINDOWS_UWP
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -267,9 +266,6 @@ namespace ReactNative.Views.View
 
             if (_isFluentSupported)
             {
-                var border = GetOrCreateBorder(view);
-                border.Tag = "Reveal = Normal";
-
                 if (value)
                 {
                     view.PointerEntered += Reveal_PointerEntered;
@@ -285,19 +281,15 @@ namespace ReactNative.Views.View
 
         private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            Debug.WriteLine("Reveal_PointerEntered");
             var canvas = sender as BorderedCanvas;
             var border = GetOrCreateBorder(canvas);
-            border.Tag = "Reveal = PointerOver";
             RevealBrush.SetState(border, RevealBrushState.PointerOver);
         }
 
         private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
         {
-            Debug.WriteLine("Reveal_PointerExited");
             var canvas = sender as BorderedCanvas;
             var border = GetOrCreateBorder(canvas);
-            border.Tag = "Reveal = Normal";
             border.ClearValue(RevealBrush.StateProperty);
         }
 
