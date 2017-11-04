@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 #if WINDOWS_UWP
 using Windows.UI;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
@@ -35,14 +36,16 @@ namespace ReactNative.Views.View
         private class BackgroundBrushProperties
         {
             public uint? BackgroundColor;
+            public uint? BorderColor;
+            public bool RevealBrush;
             public double? AcrylicOpacity;
             public uint? AcrylicTintColor;
             public string AcrylicSource;
         }
 
-        private readonly bool _isAcrylicSupported =
+        private readonly bool _isFluentSupported =
 #if WINDOWS_UWP
-            ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush");
+            ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", 5, 0);
 #else
             false;
 #endif
@@ -78,13 +81,38 @@ namespace ReactNative.Views.View
             var border = GetOrCreateBorder(view);
             var props = _backgroundBrushProperties.GetOrCreateValue(view);
 
+            if (_isFluentSupported && props.RevealBrush && props.BorderColor != null)
+            {
+#if WINDOWS_UWP
+                border.BorderBrush = new RevealBorderBrush
+                {
+                    Color = ColorHelpers.Parse((uint)props.BorderColor),
+                    FallbackColor = ColorHelpers.Parse((uint)props.BorderColor),
+                };
+#endif
+            }
+            else if (props.BorderColor != null)
+            {
+                border.BorderBrush = new SolidColorBrush(ColorHelpers.Parse((uint)props.BorderColor));
+            }
+            else
+            {
+                border.BorderBrush = s_defaultBorderBrush;
+            }
+
             if (props.BackgroundColor != null)
             {
-                if (!_isAcrylicSupported || props.AcrylicOpacity == null && props.AcrylicTintColor == null)
+                if (_isFluentSupported && props.RevealBrush)
                 {
-                    border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
+#if WINDOWS_UWP
+                    border.Background = new RevealBackgroundBrush
+                    {
+                        Color = ColorHelpers.Parse(props.BackgroundColor.Value),
+                        FallbackColor = ColorHelpers.Parse(props.BackgroundColor.Value),
+                    };
+#endif
                 }
-                else
+                else if (_isFluentSupported && (props.AcrylicOpacity != null || props.AcrylicTintColor != null))
                 {
 #if WINDOWS_UWP
                     border.Background = new AcrylicBrush
@@ -97,6 +125,10 @@ namespace ReactNative.Views.View
                         TintOpacity = props.AcrylicOpacity ?? 1.0,
                     };
 #endif
+                }
+                else
+                {
+                    border.Background = new SolidColorBrush(ColorHelpers.Parse(props.BackgroundColor.Value));
                 }
             }
         }
@@ -248,6 +280,41 @@ namespace ReactNative.Views.View
             UpdateBackgroundBrush(view);
         }
 
+        [ReactProp("reveal", DefaultBoolean = false)]
+        public void SetRevealHighlightEnabled(BorderedCanvas view, bool value)
+        {
+            _backgroundBrushProperties.GetOrCreateValue(view).RevealBrush = value;
+            UpdateBackgroundBrush(view);
+
+            if (_isFluentSupported)
+            {
+                if (value)
+                {
+                    view.PointerEntered += Reveal_PointerEntered;
+                    view.PointerExited += Reveal_PointerExited;
+                }
+                else
+                {
+                    view.PointerEntered -= Reveal_PointerEntered;
+                    view.PointerExited -= Reveal_PointerExited;
+                }
+            }
+        }
+
+        private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            var canvas = sender as BorderedCanvas;
+            var border = GetOrCreateBorder(canvas);
+            RevealBrush.SetState(border, RevealBrushState.PointerOver);
+        }
+
+        private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            var canvas = sender as BorderedCanvas;
+            var border = GetOrCreateBorder(canvas);
+            border.ClearValue(RevealBrush.StateProperty);
+        }
+
         /// <summary>
         /// Set the border color of the view.
         /// </summary>
@@ -256,10 +323,8 @@ namespace ReactNative.Views.View
         [ReactProp("borderColor", CustomType = "Color")]
         public void SetBorderColor(BorderedCanvas view, uint? color)
         {
-            var border = GetOrCreateBorder(view);
-            border.BorderBrush = color.HasValue
-                ? new SolidColorBrush(ColorHelpers.Parse(color.Value))
-                : s_defaultBorderBrush;
+            _backgroundBrushProperties.GetOrCreateValue(view).BorderColor = color;
+            UpdateBackgroundBrush(view);
         }
 
         /// <summary>
