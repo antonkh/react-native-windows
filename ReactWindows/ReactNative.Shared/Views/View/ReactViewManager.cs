@@ -272,13 +272,13 @@ namespace ReactNative.Views.View
 
                 if (value)
                 {
-                    border.PointerEntered += Reveal_PointerEntered;
-                    border.PointerExited += Reveal_PointerExited;
+                    view.PointerEntered += Reveal_PointerEntered;
+                    view.PointerExited += Reveal_PointerExited;
                 }
                 else
                 {
-                    border.PointerEntered -= Reveal_PointerEntered;
-                    border.PointerExited -= Reveal_PointerExited;
+                    view.PointerEntered -= Reveal_PointerEntered;
+                    view.PointerExited -= Reveal_PointerExited;
                 }
             }
         }
@@ -286,7 +286,8 @@ namespace ReactNative.Views.View
         private void Reveal_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             Debug.WriteLine("Reveal_PointerEntered");
-            var border = sender as Border;
+            var canvas = sender as BorderedCanvas;
+            var border = GetOrCreateBorder(canvas);
             border.Tag = "Reveal = PointerOver";
             RevealBrush.SetState(border, RevealBrushState.PointerOver);
         }
@@ -294,7 +295,8 @@ namespace ReactNative.Views.View
         private void Reveal_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             Debug.WriteLine("Reveal_PointerExited");
-            var border = sender as Border;
+            var canvas = sender as BorderedCanvas;
+            var border = GetOrCreateBorder(canvas);
             border.Tag = "Reveal = Normal";
             border.ClearValue(RevealBrush.StateProperty);
         }
