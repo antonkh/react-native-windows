@@ -36,6 +36,7 @@ namespace ReactNative.Views.View
         private class BackgroundBrushProperties
         {
             public uint? BackgroundColor;
+            public uint? BorderColor;
             public bool RevealBrush;
             public double? AcrylicOpacity;
             public uint? AcrylicTintColor;
@@ -80,15 +81,36 @@ namespace ReactNative.Views.View
             var border = GetOrCreateBorder(view);
             var props = _backgroundBrushProperties.GetOrCreateValue(view);
 
+            if (_isFluentSupported && props.RevealBrush && props.BorderColor != null)
+            {
+#if WINDOWS_UWP
+                border.BorderBrush = new RevealBorderBrush
+                {
+                    Color = ColorHelpers.Parse((uint)props.BorderColor),
+                    FallbackColor = ColorHelpers.Parse((uint)props.BorderColor),
+                };
+#endif
+            }
+            else if (props.BorderColor != null)
+            {
+                border.BorderBrush = new SolidColorBrush(ColorHelpers.Parse((uint)props.BorderColor));
+            }
+            else
+            {
+                border.BorderBrush = s_defaultBorderBrush;
+            }
+
             if (props.BackgroundColor != null)
             {
                 if (_isFluentSupported && props.RevealBrush)
                 {
+#if WINDOWS_UWP
                     border.Background = new RevealBackgroundBrush
                     {
                         Color = ColorHelpers.Parse(props.BackgroundColor.Value),
                         FallbackColor = ColorHelpers.Parse(props.BackgroundColor.Value),
                     };
+#endif
                 }
                 else if (_isFluentSupported && (props.AcrylicOpacity != null || props.AcrylicTintColor != null))
                 {
@@ -301,18 +323,8 @@ namespace ReactNative.Views.View
         [ReactProp("borderColor", CustomType = "Color")]
         public void SetBorderColor(BorderedCanvas view, uint? color)
         {
-            var border = GetOrCreateBorder(view);
-            border.BorderBrush = color.HasValue
-                ? new SolidColorBrush(ColorHelpers.Parse(color.Value))
-                : s_defaultBorderBrush;
-            if (_backgroundBrushProperties.GetOrCreateValue(view).RevealBrush)
-            {
-                border.BorderBrush = new RevealBorderBrush
-                {
-                    Color = ColorHelpers.Parse(color.Value),
-                    FallbackColor = ColorHelpers.Parse(color.Value),
-                };
-            }
+            _backgroundBrushProperties.GetOrCreateValue(view).BorderColor = color;
+            UpdateBackgroundBrush(view);
         }
 
         /// <summary>
